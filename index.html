@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Campground Booking</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 10px; padding: 0; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+        h1, h2 { text-align: center; }
+        .site { border: 1px solid #ccc; padding: 10px; margin: 5px; max-width: 90%; background-color: #f9f9f9; opacity: 0.64; }
+        button { padding: 5px 10px; background-color: #4CAF50; color: white; border: none; width: 100%; margin-top: 5px; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        .site button { opacity: 1.0; }
+        button:disabled { background-color: #ccc; opacity: 1.0; cursor: not-allowed; }
+        form { max-width: 90%; margin: 10px auto; }
+        label { display: block; margin: 5px 0; }
+        input, select { width: 100%; padding: 5px; box-sizing: border-box; -webkit-appearance: none; }
+        #siteName { border: none; background: none; }
+        .logo { display: block; margin: 0 auto; max-width: 150px; height: auto; }
+    </style>
+</head>
+<body>
+    <img src="https://raw.githubusercontent.com/justus888/campground-booking/main/logo.png" alt="Campground Logo" class="logo">
+    <h1>Book your adventure here!</h1>
+    <h2>Available Sites</h2>
+    <div id="siteList"></div>
+    <h2>Book a Site</h2>
+    <form id="bookingForm">
+        <label>Site Name: <input type="text" id="siteName" readonly></label>
+        <label>Your Name: <input type="text" id="userName" required></label>
+        <label>Dates: <input type="text" id="dateRange" placeholder="Select dates" required></label>
+        <label>Payment Method:
+            <select id="paymentMethod" required>
+                <option value="">Select Payment</option>
+                <option value="GCash">GCash</option>
+                <option value="PayPal">PayPal</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+        </label>
+        <button type="submit">Book Now</button>
+    </form>
+    <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
+    <script>
+        let campsites = [
+            { name: "Site A", price: 1000 },
+            { name: "Site B", price: 1250 },
+            { name: "Site C", price: 750 }
+        ];
+        let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+
+        const picker = new Litepicker({
+            element: document.getElementById('dateRange'),
+            singleMode: false,
+            numberOfMonths: 2,
+            numberOfColumns: 2,
+            format: 'MM/DD/YYYY',
+            minDate: new Date(),
+            setup: (picker) => {
+                picker.on('selected', (start, end) => {
+                    document.getElementById('dateRange').value = `${start.dateInstance.toLocaleDateString('en-US')} - ${end.dateInstance.toLocaleDateString('en-US')}`;
+                });
+            }
+        });
+
+        function parseDateRange(dateRange) {
+            const [start, end] = dateRange.split(' - ').map(d => new Date(d));
+            return { start, end };
+        }
+
+        function datesOverlap(range1, range2) {
+            const { start: start1, end: end1 } = parseDateRange(range1);
+            const { start: start2, end: end2 } = parseDateRange(range2);
+            return start1 <= end2 && start2 <= end1;
+        }
+
+        function displaySites() {
+            const siteList = document.getElementById("siteList");
+            siteList.innerHTML = "";
+            campsites.forEach(site => {
+                const div = document.createElement("div");
+                div.className = "site";
+                const button = document.createElement("button");
+                button.textContent = "Book";
+                button.addEventListener('click', () => selectSite(site.name));
+                button.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    selectSite(site.name);
+                }, { passive: false });
+                div.innerHTML = `${site.name} - ₱${site.price}/night `;
+                div.appendChild(button);
+                siteList.appendChild(div);
+            });
+        }
+
+        function selectSite(siteName) {
+            document.getElementById("siteName").value = siteName;
+        }
+
+        document.getElementById("bookingForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const siteName = document.getElementById("siteName").value;
+            const userName = document.getElementById("userName").value;
+            const dates = document.getElementById("dateRange").value;
+            const paymentMethod = document.getElementById("paymentMethod").value;
+
+            if (!siteName || !dates) {
+                alert("Please select a site and dates!");
+                return;
+            }
+
+            const overlappingBooking = bookings.find(b => 
+                b.siteName === siteName && datesOverlap(b.dates, dates)
+            );
+
+            if (overlappingBooking) {
+                alert("Sorry, this site is booked for those dates!");
+            } else {
+                bookings.push({ siteName, userName, dates, paymentMethod });
+                localStorage.setItem('bookings', JSON.stringify(bookings));
+                displaySites();
+                this.reset();
+                document.getElementById("siteName").value = "";
+                alert("Booking confirmed! Payment details will be sent separately.");
+            }
+        });
+
+        displaySites();
+    </script>
+</body>
+</html>
