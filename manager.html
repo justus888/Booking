@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 10px; padding: 0; }
+        h1, h3 { text-align: center; }
+        #managerDashboard { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+        input { width: 100%; padding: 5px; box-sizing: border-box; margin: 5px 0; }
+        button { padding: 5px 10px; background-color: #4CAF50; color: white; border: none; width: 100%; margin-top: 5px; }
+        .cancel-btn { background-color: #ff4444; }
+    </style>
+</head>
+<body>
+    <h1>Manager Dashboard</h1>
+    <div id="managerDashboard">
+        <h3>View Bookings</h3>
+        <p>Password: <input type="password" id="managerPassword"></p>
+        <button onclick="showBookings()">Show Bookings</button>
+        <div id="managerBookings"></div>
+        <p>New Booking? Email yourself: 
+            <a id="emailLink" href="mailto:justus@example.com?subject=New Booking Alert&body=Check your dashboard for new bookings!">Send Email</a>
+        </p>
+    </div>
+    <script>
+        let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+        function showBookings() {
+            const password = document.getElementById("managerPassword").value;
+            const managerBookings = document.getElementById("managerBookings");
+            if (password === "admin123") { // Change this!
+                managerBookings.innerHTML = "<h4>All Bookings:</h4>";
+                if (bookings.length === 0) {
+                    managerBookings.innerHTML += "<p>No bookings yet.</p>";
+                } else {
+                    bookings.forEach((booking, index) => {
+                        managerBookings.innerHTML += `<p>${booking.siteName} - ${booking.userName} - ${booking.dates} - ${booking.paymentMethod}
+                            <button class="cancel-btn" onclick="cancelBooking(${index})">Cancel</button></p>`;
+                    });
+                    const latestBooking = bookings[bookings.length - 1];
+                    const emailBody = `New booking: ${latestBooking.siteName} by ${latestBooking.userName} for ${latestBooking.dates} via ${latestBooking.paymentMethod}`;
+                    document.getElementById("emailLink").href = `mailto:justus@example.com?subject=New Booking Alert&body=${encodeURIComponent(emailBody)}`;
+                }
+            } else {
+                managerBookings.innerHTML = "Incorrect password!";
+            }
+        }
+        function cancelBooking(index) {
+            if (confirm("Cancel this booking?")) {
+                bookings.splice(index, 1);
+                localStorage.setItem('bookings', JSON.stringify(bookings));
+                showBookings();
+            }
+        }
+    </script>
+</body>
+</html>
