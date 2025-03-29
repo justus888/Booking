@@ -10,10 +10,12 @@
         h1, h2 { text-align: center; }
         .site { border: 1px solid #ccc; padding: 10px; margin: 5px; max-width: 90%; background-color: #f9f9f9; opacity: 0.64; }
         button { padding: 5px 10px; background-color: #4CAF50; color: white; border: none; width: 100%; margin-top: 5px; }
-        button:disabled { background-color: #ccc; }
+        .site button { opacity: 1.0; } /* Book buttons fully opaque */
+        button:disabled { background-color: #ccc; opacity: 1.0; }
         form { max-width: 90%; margin: 10px auto; }
         label { display: block; margin: 5px 0; }
         input, select { width: 100%; padding: 5px; box-sizing: border-box; }
+        #siteName { border: none; background: none; } /* Display-only site name */
         .logo { display: block; margin: 0 auto; max-width: 150px; height: auto; }
     </style>
 </head>
@@ -24,14 +26,7 @@
     <div id="siteList"></div>
     <h2>Book a Site</h2>
     <form id="bookingForm">
-        <label>Site Name:
-            <select id="siteName" required>
-                <option value="">Select a Site</option>
-                <option value="Site A">Site A</option>
-                <option value="Site B">Site B</option>
-                <option value="Site C">Site C</option>
-            </select>
-        </label>
+        <label>Site Name: <input type="text" id="siteName" readonly></label>
         <label>Your Name: <input type="text" id="userName" required></label>
         <label>Dates: <input type="text" id="dateRange" placeholder="Select dates" required></label>
         <label>Payment Method:
@@ -78,7 +73,11 @@
             });
         }
         function selectSite(siteName) {
-            document.getElementById("siteName").value = siteName;
+            if (!bookings.some(b => b.siteName === siteName)) {
+                document.getElementById("siteName").value = siteName;
+            } else {
+                alert("That site is already booked!");
+            }
         }
         document.getElementById("bookingForm").addEventListener("submit", function(event) {
             event.preventDefault();
@@ -86,15 +85,15 @@
             const userName = document.getElementById("userName").value;
             const dates = document.getElementById("dateRange").value;
             const paymentMethod = document.getElementById("paymentMethod").value;
-            const site = campsites.find(s => s.name === siteName);
-            if (site && !bookings.some(b => b.siteName === siteName)) {
+            if (siteName && !bookings.some(b => b.siteName === siteName)) {
                 bookings.push({ siteName, userName, dates, paymentMethod });
                 localStorage.setItem('bookings', JSON.stringify(bookings));
                 displaySites();
                 this.reset();
+                document.getElementById("siteName").value = "";
                 alert("Booking confirmed! Payment details will be sent separately.");
             } else {
-                alert("Sorry, that site isn’t available!");
+                alert("Please select an available site!");
             }
         });
         displaySites();
