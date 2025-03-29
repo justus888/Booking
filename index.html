@@ -2,26 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Campground Booking</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 10px; padding: 0; }
+        body { font-family: Arial, sans-serif; margin: 10px; padding: 0; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
         h1, h2 { text-align: center; }
         .site { border: 1px solid #ccc; padding: 10px; margin: 5px; max-width: 90%; background-color: #f9f9f9; opacity: 0.64; }
-        button { padding: 5px 10px; background-color: #4CAF50; color: white; border: none; width: 100%; margin-top: 5px; }
-        .site button { opacity: 1.0; } /* Book buttons fully opaque */
-        button:disabled { background-color: #ccc; opacity: 1.0; }
+        button { padding: 5px 10px; background-color: #4CAF50; color: white; border: none; width: 100%; margin-top: 5px; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        .site button { opacity: 1.0; }
+        button:disabled { background-color: #ccc; opacity: 1.0; cursor: not-allowed; }
         form { max-width: 90%; margin: 10px auto; }
         label { display: block; margin: 5px 0; }
-        input, select { width: 100%; padding: 5px; box-sizing: border-box; }
-        #siteName { border: none; background: none; } /* Display-only site name */
+        input, select { width: 100%; padding: 5px; box-sizing: border-box; -webkit-appearance: none; }
+        #siteName { border: none; background: none; }
         .logo { display: block; margin: 0 auto; max-width: 150px; height: auto; }
     </style>
 </head>
 <body>
-    <img src="https://github.com/justus888/Booking/blob/5edc9c5eefcc9e32b5a8ebfcd8f72cf4bed6dcc8/IMG_0043.png" alt="Campground Logo" class="logo">
-    <h1>CampCateel</h1>
+    <img src="https://raw.githubusercontent.com/justus888/campground-booking/main/logo.png" alt="Campground Logo" class="logo">
+    <h1>My Campground</h1>
     <h2>Available Sites</h2>
     <div id="siteList"></div>
     <h2>Book a Site</h2>
@@ -47,6 +47,7 @@
             { name: "Site C", price: 750 }
         ];
         let bookings = JSON.parse(localStorage.getItem('bookings')) || [];
+
         const picker = new Litepicker({
             element: document.getElementById('dateRange'),
             singleMode: false,
@@ -60,42 +61,70 @@
                 });
             }
         });
+
+        function parseDateRange(dateRange) {
+            const [start, end] = dateRange.split(' - ').map(d => new Date(d));
+            return { start, end };
+        }
+
+        function datesOverlap(range1, range2) {
+            const { start: start1, end: end1 } = parseDateRange(range1);
+            const { start: start2, end: end2 } = parseDateRange(range2);
+            return start1 <= end2 && start2 <= end1;
+        }
+
         function displaySites() {
             const siteList = document.getElementById("siteList");
             siteList.innerHTML = "";
             campsites.forEach(site => {
-                const isBooked = bookings.some(b => b.siteName === site.name);
                 const div = document.createElement("div");
                 div.className = "site";
-                div.innerHTML = `${site.name} - ₱${site.price}/night
-                    <button onclick="selectSite('${site.name}')" ${isBooked ? "disabled" : ""}>Book</button>`;
+                const button = document.createElement("button");
+                button.textContent = "Book";
+                button.addEventListener('click', () => selectSite(site.name));
+                button.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    selectSite(site.name);
+                }, { passive: false });
+                div.innerHTML = `${site.name} - ₱${site.price}/night `;
+                div.appendChild(button);
                 siteList.appendChild(div);
             });
         }
+
         function selectSite(siteName) {
-            if (!bookings.some(b => b.siteName === siteName)) {
-                document.getElementById("siteName").value = siteName;
-            } else {
-                alert("That site is already booked!");
-            }
+            document.getElementById("siteName").value = siteName;
         }
+
         document.getElementById("bookingForm").addEventListener("submit", function(event) {
             event.preventDefault();
             const siteName = document.getElementById("siteName").value;
             const userName = document.getElementById("userName").value;
             const dates = document.getElementById("dateRange").value;
             const paymentMethod = document.getElementById("paymentMethod").value;
-            if (siteName && !bookings.some(b => b.siteName === siteName)) {
+
+            if (!siteName || !dates) {
+                alert("Please select a site and dates!");
+                return;
+            }
+
+            const overlappingBooking = bookings.find(b => 
+                b.siteName === siteName && datesOverlap(b.dates, dates)
+            );
+
+            if (overlappingBooking) {
+                alert("Sorry, this site is booked for those dates!");
+            } else {
                 bookings.push({ siteName, userName, dates, paymentMethod });
                 localStorage.setItem('bookings', JSON.stringify(bookings));
                 displaySites();
                 this.reset();
                 document.getElementById("siteName").value = "";
                 alert("Booking confirmed! Payment details will be sent separately.");
-            } else {
-                alert("Please select an available site!");
             }
         });
+
         displaySites();
     </script>
 </body>
+</html>
