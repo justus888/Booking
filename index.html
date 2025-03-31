@@ -6,13 +6,25 @@
     <title>Campground Booking</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 10px; padding: 0; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
-        h1, h2 { text-align: center; }
-        .site { border: 1px solid #ccc; padding: 10px; margin: 5px; max-width: 90%; background-color: #f9f9f9; opacity: 0.64; }
-        button { padding: 5px 10px; background-color: #4CAF50; color: white; border: none; width: 100%; margin-top: 5px; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 10px; 
+            padding: 0; 
+            touch-action: manipulation; 
+            -webkit-user-select: none; 
+            user-select: none; 
+            background-image: url('https://i.postimg.cc/xyz789/background.jpg'); 
+            background-size: cover; 
+            background-position: center; 
+            background-repeat: no-repeat; 
+            min-height: 100vh; 
+        }
+        h1, h2 { text-align: center; color: #fff; text-shadow: 1px 1px 2px #000; }
+        .site { border: 1px solid #ccc; padding: 10px; margin: 5px; max-width: 90%; background-color: rgba(249, 249, 249, 0.85); opacity: 1.0; }
+        button { padding: 5px 10px; background-color: #4CAF50; color: white; border: none; width: 100%; margin-top: 5px; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; font-size: 16px; }
         .site button { opacity: 1.0; }
         button:disabled { background-color: #ccc; opacity: 1.0; cursor: not-allowed; }
-        form { max-width: 90%; margin: 10px auto; }
+        form { max-width: 90%; margin: 10px auto; background-color: rgba(255, 255, 255, 0.9); padding: 10px; border-radius: 5px; }
         label { display: block; margin: 5px 0; }
         input, select { width: 100%; padding: 5px; box-sizing: border-box; -webkit-appearance: none; }
         #siteName { border: none; background: none; }
@@ -20,8 +32,8 @@
     </style>
 </head>
 <body>
-    <img src="https://i.postimg.cc/CxBJjnJf/IMG-0043.png" alt="Campground Logo" class="logo">
-    <h1>Book your adventure here!</h1>
+    <img src="https://github.com/justus888/Booking/blob/159fb88ff8953cd2785f3e757363217fdd725df3/IMG_0043" alt="Campground Logo" class="logo" onerror="this.style.display='none';">
+    <h1>My Campground</h1>
     <h2>Available Sites</h2>
     <div id="siteList"></div>
     <h2>Book a Site</h2>
@@ -81,11 +93,15 @@
                 div.className = "site";
                 const button = document.createElement("button");
                 button.textContent = "Select";
-                button.addEventListener('click', () => selectSite(site.name));
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    selectSite(site.name);
+                });
                 button.addEventListener('touchstart', (e) => {
                     e.preventDefault();
                     selectSite(site.name);
                 }, { passive: false });
+                button.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
                 div.innerHTML = `${site.name} - ₱${site.price}/night `;
                 div.appendChild(button);
                 siteList.appendChild(div);
